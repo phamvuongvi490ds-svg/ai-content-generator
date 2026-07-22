@@ -63,6 +63,16 @@
       <div id="botList"></div>
     </div>
     <div class="card">
+      <h3>Cấu hình trích xuất bài báo</h3>
+      <p style="color:#94a3b8; font-size:13px; margin-top:-5px;">Phần này chỉ dùng Gemini/Vertex để lấy đúng nội dung bài báo. Không liên quan đến chatbot viết bài.</p>
+      <div class="form-group">
+        <label>Service Account JSON Vertex/Gemini</label>
+        <input type="text" id="articleServiceAccountPath" readonly placeholder="Chọn file Service Account JSON dùng riêng cho lấy nội dung bài báo">
+        <button class="secondary" style="margin-top:5px" onclick="pickArticleServiceAccount()">Chọn File</button>
+      </div>
+      <button onclick="saveArticleExtractorConfig()">Lưu cấu hình trích xuất</button>
+    </div>
+    <div class="card">
       <h3>Thiết lập Chatbot Mới</h3>
       <div class="form-group">
         <label>Tên Gợi Nhớ</label>
