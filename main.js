@@ -56,6 +56,17 @@ async function getVertexToken(keyPath) {
   return token.token;
 }
 
+
+function cleanFinalContent(text) {
+  if (!text) return "";
+  return text
+    .split("\n").filter(line => {
+        const l = line.trim();
+        if (l.match(/^(Ảnh:|Quỳnh Trang|Theo|Tác giả:)/i)) return false;
+        return true;
+    }).join("\n").trim();
+}
+
 async function callApiGeneric({ bot, prompt }) {
   const { apiType, baseUrl, apiKeys, keyIndex, serviceAccountPath, geminiBaseUrl, openaiBaseUrl, systemInstruction } = bot;
   const keys = apiKeys && apiKeys.length ? apiKeys : [''];
@@ -173,11 +184,21 @@ ipcMain.handle('fetch-article', async (event, payload) => {
       .replace(/\n\s*\n+/g, '\n\n')
       .replace(/[ \t]+/g, ' ')
       .trim();
+        // Nội dung đã sạch sau khi qua cleanFinalContent
+
     if (bot && roughText) {
-      const prompt = `Bạn là chuyên gia trích xuất bài báo. Từ văn bản thô dưới đây, chỉ giữ lại nội dung chính liên quan trực tiếp tới bài báo/thời sự. Bỏ menu, quảng cáo, tiêu đề phụ không liên quan, ảnh, chú thích ảnh, gợi ý bài khác, thông tin bản quyền. Trả về nội dung sạch, không thêm lời dẫn.\n\n${roughText.slice(0, 50000)}`;
+      const prompt = `Bạn là chuyên gia trích xuất nội dung báo. 
+QUY TẮC BẮT BUỘC:
+1. LOẠI BỎ TOÀN BỘ chú thích ảnh. Chú thích ảnh thường có dạng: "(Ảnh: ...)", "Ảnh: ...", "Ảnh minh họa: ...". 
+2. LOẠI BỎ TÊN TÁC GIẢ hoặc các câu cuối bài kiểu "Theo ...", "Tác giả: ...".
+3. Chỉ lấy phần thân bài chính (nội dung sự kiện, tin tức). 
+4. Nếu gặp các đoạn text liệt kê bảng biểu (như "Bảng chứng chỉ..."), hãy cân nhắc xem nó là nội dung chính hay là thông tin quảng cáo/phụ trợ, nếu là thông tin phụ thì loại bỏ.
+5. Tuyệt đối không thêm bất kỳ lời dẫn hay nhận xét nào của bạn vào kết quả.\n\n${roughText.slice(0, 50000)}`;
       const data = await callApiGeneric({ bot, prompt });
       const aiText = data?.choices?.[0]?.message?.content || data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      if (aiText.trim()) roughText = aiText.trim();
+      if (aiText.trim()) roughText = cleanFinalContent(aiText.trim());
+        // Nội dung đã sạch sau khi qua cleanFinalContent
+
     }
     return { text: roughText.slice(0, 80000) };
   } catch (e) {
