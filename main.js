@@ -45,7 +45,9 @@ async function getVertexToken(keyPath) {
   const client = await auth.getClient();
   return (await client.getAccessToken()).token;
 }
+
 async function callApiGeneric({ bot, prompt }) {
+  if (!bot) return { error: "Bot không tồn tại" };
   const { apiType, baseUrl, apiKeys, keyIndex, serviceAccountPath, geminiBaseUrl, openaiBaseUrl, systemInstruction } = bot;
   const keys = apiKeys && apiKeys.length ? apiKeys : [''];
   const models = fallbackModels(apiType, bot.model || (apiType === 'openai' ? 'gpt-4o-mini' : 'gemini-2.5-flash'));
@@ -64,7 +66,10 @@ async function callApiGeneric({ bot, prompt }) {
           url = `${(openaiBaseUrl || 'https://api.openai.com').replace(/\/$/, '')}/v1/chat/completions`;
           headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
           body = JSON.stringify({ model, messages: [{ role: 'system', content: systemInstruction || '' }, { role: 'user', content: prompt }], temperature: 0.8 });
-        }
+        } else { return { error: "Loại API không hợp lệ" }; }
+        
+        if (!url) throw new Error("URL bị undefined");
+        
         const response = await fetch(url, { method: 'POST', headers, body });
         const data = await response.json();
         lastData = data;
@@ -77,7 +82,6 @@ async function callApiGeneric({ bot, prompt }) {
   return lastData || { error: 'All retries failed.' };
 }
 
-// ĐĂNG KÝ CÁC HÀM IPC BỊ THIẾU
 ipcMain.handle('call-api', async (event, { bot, prompt }) => {
   return await callApiGeneric({ bot, prompt });
 });
@@ -94,6 +98,7 @@ ipcMain.handle('fetch-article', async (event, payload) => {
   try {
     const url = typeof payload === 'string' ? payload : payload?.url;
     const bot = typeof payload === 'object' ? payload?.bot : null;
+    if (!url) return { error: 'URL không hợp lệ.' };
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36' } });
     const html = await res.text();
     const dom = new JSDOM(html);
@@ -103,7 +108,7 @@ ipcMain.handle('fetch-article', async (event, payload) => {
     doc.querySelectorAll("h1, h2, h3, p").forEach(el => textContent += el.textContent + "\n");
 
     if (bot && textContent) {
-      const prompt = `Trích xuất nội dung chính từ bài viết sau. BỎ QUA MỌI CHÚ THÍCH ẢNH, TÁC GIẢ, QUẢNG CÁO: \n${textContent.slice(0, 50000)}`;
+      const prompt = `Trích xuất nội dung chính. BỎ CHÚ THÍCH ẢNH, TÁC GIẢ, QUẢNG CÁO:\n${textContent.slice(0, 50000)}`;
       const data = await callApiGeneric({ bot, prompt });
       const aiText = data?.choices?.[0]?.message?.content || data?.candidates?.[0]?.content?.parts?.[0]?.text || textContent;
       return { text: cleanFinalContent(aiText) };
