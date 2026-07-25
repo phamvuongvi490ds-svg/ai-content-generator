@@ -152,9 +152,16 @@ ipcMain.handle('fetch-article', async (event, payload) => {
     doc.querySelectorAll("h1, h2, h3, p").forEach(el => textContent += el.textContent + "\n");
 
     if (bot && textContent) {
+      
       const prompt = `Bạn là chuyên gia trích xuất nội dung báo. 
-      NHIỆM VỤ: Chỉ lấy nội dung chính (thân bài). LOẠI BỎ TOÀN BỘ: Chú thích ảnh (dòng có chữ "Ảnh:"), tên tác giả, thông tin bản quyền ở cuối bài, quảng cáo.
-      VĂN BẢN THÔ: \n${textContent.slice(0, 50000)}`;
+      QUY TẮC CẮT BỎ TUYỆT ĐỐI:
+      - Loại bỏ ngay các câu có cấu trúc: "Ảnh: [Tên]" hoặc "(Ảnh: [Tên])" hoặc "Ảnh minh họa: [Tên]".
+      - Loại bỏ tên tác giả ở cuối bài, ví dụ: "Quỳnh Trang", "Minh Thư".
+      - Loại bỏ mọi nội dung về chứng chỉ tiền gửi, lãi suất, bảng biểu nếu đó không phải trọng tâm bài viết.
+      - Bỏ qua các dòng chú thích dưới ảnh.
+      NỘI DUNG BÀI BÁO (Làm sạch ngay): 
+${textContent.slice(0, 50000)}`;
+
       const data = await callApiGeneric({ bot, prompt });
       const aiText = data?.choices?.[0]?.message?.content || data?.candidates?.[0]?.content?.parts?.[0]?.text || textContent;
       return { text: aiText.trim() };
