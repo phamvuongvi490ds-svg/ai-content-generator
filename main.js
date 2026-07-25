@@ -36,18 +36,15 @@ function isRetryableError(data) {
   const status = data?.error?.status;
   return code === 429 || code === 500 || code === 502 || code === 503 || code === 504 || status === 'UNAVAILABLE' || status === 'RESOURCE_EXHAUSTED';
 }
-
 function fallbackModels(apiType, model) {
   const list = apiType === 'openai' ? ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1-mini'] : ['gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-pro'];
   return [model, ...list.filter(m => m !== model)];
 }
-
 async function getVertexToken(keyPath) {
   const auth = new GoogleAuth({ keyFile: keyPath, scopes: 'https://www.googleapis.com/auth/cloud-platform' });
   const client = await auth.getClient();
   return (await client.getAccessToken()).token;
 }
-
 async function callApiGeneric({ bot, prompt }) {
   const { apiType, baseUrl, apiKeys, keyIndex, serviceAccountPath, geminiBaseUrl, openaiBaseUrl, systemInstruction } = bot;
   const keys = apiKeys && apiKeys.length ? apiKeys : [''];
@@ -80,11 +77,23 @@ async function callApiGeneric({ bot, prompt }) {
   return lastData || { error: 'All retries failed.' };
 }
 
+// ĐĂNG KÝ CÁC HÀM IPC BỊ THIẾU
+ipcMain.handle('call-api', async (event, { bot, prompt }) => {
+  return await callApiGeneric({ bot, prompt });
+});
+ipcMain.handle('select-file', async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({ properties: ['openFile'], filters: [{ name: 'JSON', extensions: ['json'] }] });
+  return canceled ? null : filePaths[0];
+});
+ipcMain.handle('save-text-file', async (event, { filename, text }) => {
+  const { canceled, filePath } = await dialog.showSaveDialog({ defaultPath: filename || 'ai-content.txt', filters: [{ name: 'Text', extensions: ['txt'] }] });
+  return (canceled || !filePath) ? null : (fs.writeFileSync(filePath, text || '', 'utf8'), filePath);
+});
+
 ipcMain.handle('fetch-article', async (event, payload) => {
   try {
     const url = typeof payload === 'string' ? payload : payload?.url;
     const bot = typeof payload === 'object' ? payload?.bot : null;
-    if (!url || !/^https?:\/\//i.test(url)) return { error: 'URL không hợp lệ.' };
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36' } });
     const html = await res.text();
     const dom = new JSDOM(html);
