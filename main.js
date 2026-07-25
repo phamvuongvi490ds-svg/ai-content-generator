@@ -7,14 +7,12 @@ const { JSDOM } = require("jsdom");
 function cleanFinalContent(text) {
     if (!text) return "";
     const badLines = ["Ảnh:", "(Ảnh:", "Ảnh minh họa:", "Tác giả:", "Theo", "VnExpress", "Gia Chính", "dấu tích xanh"];
-    return text.split("\n")
-        .filter(line => {
-            const l = line.trim();
-            if (l.length === 0) return true;
-            for (let b of badLines) if (l.includes(b)) return false;
-            return true;
-        })
-        .join("\n").trim();
+    return text.split("\n").filter(line => {
+        const l = line.trim();
+        if (l.length === 0) return true;
+        for (let b of badLines) if (l.includes(b)) return false;
+        return true;
+    }).join("\n").trim();
 }
 
 function createWindow() {
@@ -66,7 +64,18 @@ async function callApiGeneric({ bot, prompt }) {
           url = `${(openaiBaseUrl || 'https://api.openai.com').replace(/\/$/, '')}/v1/chat/completions`;
           headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
           body = JSON.stringify({ model, messages: [{ role: 'system', content: systemInstruction || '' }, { role: 'user', content: prompt }], temperature: 0.8 });
-        } else { return { error: "Loại API không hợp lệ" }; }
+        } else if (apiType === 'vertex') {
+          const token = await getVertexToken(serviceAccountPath);
+          const keyData = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
+          url = `https://us-central1-aiplatform.googleapis.com/v1/projects/${keyData.project_id}/locations/us-central1/publishers/google/models/${model}:generateContent`;
+          headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+          body = JSON.stringify({ contents: [{ role: 'user', parts: [{ text: (systemInstruction || '') + "\n\n" + prompt }] }] });
+        } else if (apiType === 'gateway') {
+          const base = (baseUrl || 'https://fisher-fare-wiley-travelling.trycloudflare.com').replace(/\/$/, '');
+          url = `${base}/v1beta/models/${model}:generateContent?key=${apiKey}`;
+          headers = { 'Content-Type': 'application/json' };
+          body = JSON.stringify({ contents: [{ role: 'user', parts: [{ text: (systemInstruction || '') + "\n\n" + prompt }] }] });
+        } else { return { error: "Loại API không hợp lệ: " + apiType }; }
         
         if (!url) throw new Error("URL bị undefined");
         
@@ -82,17 +91,9 @@ async function callApiGeneric({ bot, prompt }) {
   return lastData || { error: 'All retries failed.' };
 }
 
-ipcMain.handle('call-api', async (event, { bot, prompt }) => {
-  return await callApiGeneric({ bot, prompt });
-});
-ipcMain.handle('select-file', async () => {
-  const { canceled, filePaths } = await dialog.showOpenDialog({ properties: ['openFile'], filters: [{ name: 'JSON', extensions: ['json'] }] });
-  return canceled ? null : filePaths[0];
-});
-ipcMain.handle('save-text-file', async (event, { filename, text }) => {
-  const { canceled, filePath } = await dialog.showSaveDialog({ defaultPath: filename || 'ai-content.txt', filters: [{ name: 'Text', extensions: ['txt'] }] });
-  return (canceled || !filePath) ? null : (fs.writeFileSync(filePath, text || '', 'utf8'), filePath);
-});
+ipcMain.handle('call-api', async (event, { bot, prompt }) => { return await callApiGeneric({ bot, prompt }); });
+ipcMain.handle('select-file', async () => { const { canceled, filePaths } = await dialog.showOpenDialog({ properties: ['openFile'], filters: [{ name: 'JSON', extensions: ['json'] }] }); return canceled ? null : filePaths[0]; });
+ipcMain.handle('save-text-file', async (event, { filename, text }) => { const { canceled, filePath } = await dialog.showSaveDialog({ defaultPath: filename || 'ai-content.txt', filters: [{ name: 'Text', extensions: ['txt'] }] }); return (canceled || !filePath) ? null : (fs.writeFileSync(filePath, text || '', 'utf8'), filePath); });
 
 ipcMain.handle('fetch-article', async (event, payload) => {
   try {
@@ -108,7 +109,7 @@ ipcMain.handle('fetch-article', async (event, payload) => {
     doc.querySelectorAll("h1, h2, h3, p").forEach(el => textContent += el.textContent + "\n");
 
     if (bot && textContent) {
-      const prompt = `Trích xuất nội dung chính. BỎ CHÚ THÍCH ẢNH, TÁC GIẢ, QUẢNG CÁO:\n${textContent.slice(0, 50000)}`;
+      const prompt = `Trích xuất nội dung chính từ bài viết sau. BỎ QUA MỌI CHÚ THÍCH ẢNH, TÁC GIẢ, QUẢNG CÁO: \n${textContent.slice(0, 50000)}`;
       const data = await callApiGeneric({ bot, prompt });
       const aiText = data?.choices?.[0]?.message?.content || data?.candidates?.[0]?.content?.parts?.[0]?.text || textContent;
       return { text: cleanFinalContent(aiText) };
