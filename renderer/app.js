@@ -66,13 +66,12 @@ function bindLengthSettingsAutosave() {
 }
 
 function showTab(n) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  const btns = Array.from(document.querySelectorAll('.tab'));
-  if (btns[n-1]) btns[n-1].classList.add('active');
-  const contents = ['tab1', 'tab2', 'tab3'];
-  const target = document.getElementById(contents[n-1]);
-  if (target) target.classList.add('active');
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+  const btns = Array.from(document.querySelectorAll(".tab"));
+  if (btns[n-1]) btns[n-1].classList.add("active");
+  const target = document.getElementById("tab" + n);
+  if (target) target.classList.add("active");
 }
 
 function currentBotApiType() {
