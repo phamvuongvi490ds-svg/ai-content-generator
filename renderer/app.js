@@ -596,3 +596,30 @@ ${original}`;
   setOutput("outputTab3", text);
 }
 
+
+function toggleGeneralApiInputs() {
+  const type = document.getElementById("apiTypeGeneral").value;
+  const groups = ["genGatewayGroup", "genGeminiGroup", "genVertexGroup", "genOpenAIGroup"];
+  groups.forEach(g => {
+    const el = document.getElementById(g);
+    if(el) el.style.display = (g.toLowerCase().includes(type)) ? "block" : "none";
+  });
+}
+
+async function pickGeneralServiceAccount() {
+  const file = await window.api.selectFile();
+  if (file) document.getElementById("genServiceAccountPath").value = file;
+}
+
+function saveGeneralApiConfig() {
+  const apiType = document.getElementById("apiTypeGeneral").value;
+  const config = {
+    apiType,
+    apiKey: apiType === "gemini" ? document.getElementById("genApiKeyGemini").value : (apiType === "openai" ? document.getElementById("genApiKeyOpenAI").value : document.getElementById("genApiKeyGateway").value),
+    model: document.getElementById("apiModelGeneral").value,
+    baseUrl: apiType === "gemini" ? document.getElementById("genGeminiBaseUrl").value : (apiType === "openai" ? document.getElementById("genOpenAIBaseUrl").value : document.getElementById("genBaseUrl").value),
+    serviceAccountPath: document.getElementById("genServiceAccountPath").value
+  };
+  localStorage.setItem("generalApiConfig", JSON.stringify(config));
+  alert("Đã lưu API chung!");
+}

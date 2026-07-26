@@ -197,15 +197,55 @@
       <h3>Cấu hình API Chung (Dành cho Viết lại)</h3>
       <div class="form-group">
         <label>Loại API</label>
-        <select id="apiTypeGeneral">
-          <option value="gemini">Gemini</option>
+        <select id="apiTypeGeneral" onchange="toggleGeneralApiInputs()">
+          <option value="gateway">Gateway</option>
+          <option value="gemini">Gemini Direct</option>
+          <option value="vertex">Vertex OAuth</option>
           <option value="openai">OpenAI</option>
         </select>
       </div>
-      <div class="form-group">
-        <label>API Key</label>
-        <input type="password" id="apiKeyGeneral">
+      
+      <div id="genGatewayGroup">
+        <div class="form-group">
+          <label>Gateway Base URL</label>
+          <input type="text" id="genBaseUrl" value="https://fisher-fare-wiley-travelling.trycloudflare.com">
+        </div>
+        <div class="form-group">
+          <label>API Key</label>
+          <input type="password" id="genApiKeyGateway">
+        </div>
       </div>
+      
+      <div id="genGeminiGroup" style="display:none">
+        <div class="form-group">
+          <label>Gemini Base URL</label>
+          <input type="text" id="genGeminiBaseUrl" value="https://generativelanguage.googleapis.com">
+        </div>
+        <div class="form-group">
+          <label>Gemini API Key</label>
+          <input type="password" id="genApiKeyGemini">
+        </div>
+      </div>
+      
+      <div id="genVertexGroup" style="display:none">
+        <div class="form-group">
+          <label>Service Account JSON</label>
+          <input type="text" id="genServiceAccountPath" readonly>
+          <button class="secondary" style="margin-top:5px" onclick="pickGeneralServiceAccount()">Chọn File</button>
+        </div>
+      </div>
+      
+      <div id="genOpenAIGroup" style="display:none">
+        <div class="form-group">
+          <label>OpenAI Base URL</label>
+          <input type="text" id="genOpenAIBaseUrl" value="https://api.openai.com">
+        </div>
+        <div class="form-group">
+          <label>OpenAI API Key</label>
+          <input type="password" id="genApiKeyOpenAI">
+        </div>
+      </div>
+
       <div class="form-group">
         <label>Model ID</label>
         <input type="text" id="apiModelGeneral" value="gemini-2.0-flash">
