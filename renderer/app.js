@@ -548,9 +548,6 @@ async function fetchArticleIntoRewrite() {
   document.getElementById("originalContent").value = text;
   document.getElementById("counterArticleFetch").innerText = text.length + " ký tự";
   document.getElementById("counterTab3").innerText = text.length + " ký tự";
-});
-  if (data.error) return alert('Lỗi lấy bài báo: ' + data.error);
-  document.getElementById('originalContent').value = data.text || '';
 }
 
 async function downloadAllResults() {
