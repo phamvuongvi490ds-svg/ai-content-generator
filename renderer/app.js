@@ -571,27 +571,42 @@ async function copyOriginalContent() {
 }
 
 async function rewriteContent() {
-  const bot = config.bots[0];
-  if (!bot) return alert('Chưa có cấu hình API/Gemini. Vào Cấu hình Bot lưu API trước.');
+  const generalConfig = JSON.parse(localStorage.getItem("generalApiConfig") || "{}");
+  if (!generalConfig.apiKey) return alert("Chưa cấu hình API chung. Vào tab Cấu hình API Chung để lưu trước.");
+  
+  const original = document.getElementById("originalContent").value.trim();
+  if (!original) return alert("Chưa có nội dung.");
+  
+  // Prompt mới: tự động giữ ngôn ngữ gốc
+  const prompt = `Bạn là biên tập viên chuyên nghiệp. Hãy VIẾT LẠI nội dung dưới đây, đảm bảo GIỮ NGUYÊN NGÔN NGỮ của bản gốc (ví dụ gốc tiếng Pháp thì viết lại tiếng Pháp).
+  
+YÊU CẦU:
+- Phong cách văn nói, ngắt nghỉ như người bình thường kể chuyện.
+- Giữ ý chính, không bịa thông tin.
+- ${document.getElementById("rewriteRequirements").value.trim() || "Viết lại tự nhiên, hấp dẫn"}
 
-  const original = document.getElementById('originalContent').value.trim();
-  if (!original) return alert('Chưa có nội dung để viết lại.');
+NỘI DUNG GỐC:
+${original}`;
 
-  const req = document.getElementById('rewriteRequirements').value.trim();
-  const rMinRaw = document.getElementById('rewriteMinChars')?.value?.trim() || '';
-  const rMaxRaw = document.getElementById('rewriteMaxChars')?.value?.trim() || '';
-  const min = rMinRaw ? Number(rMinRaw) : 0;
-  const max = rMaxRaw ? Number(rMaxRaw) : 0;
-  saveLengthSettings();
+  setOutput("outputTab3", "Đang viết lại...");
+  // Sử dụng API chung
+  const data = await window.api.callApi({ bot: { ...generalConfig, apiType: generalConfig.apiType }, prompt });
+  
+  if (data.error) return setOutput("outputTab3", "Lỗi: " + data.error);
+  const text = data?.choices?.[0]?.message?.content || data?.candidates?.[0]?.content?.parts?.[0]?.text || "Không có kết quả.";
+  setOutput("outputTab3", text);
+}
 
-  const lengthTarget = pickLengthTarget(min, max);
-  const rewriteLengthInstruction = buildLengthInstruction(min, max, lengthTarget, true);
-  setOutput('outputTab3', 'Đang viết lại...');
-
-  const prompt = `Bạn là biên tập viên chuyên nghiệp. Hãy VIẾT LẠI nội dung dưới đây thành một bài mới hay hơn bản gốc, chuyên sâu hơn, mạch lạc hơn, giàu thông tin hơn.
-
-YÊU CẦU BẮT BUỘC:
-- Viết đúng theo yêu cầu/theme: ${req || 'viết lại tự nhiên, chuyên sâu, hấp dẫn, dễ đọc'}.
+function saveGeneralApiConfig() {
+  const config = {
+    apiType: document.getElementById("apiTypeGeneral").value,
+    apiKey: document.getElementById("apiKeyGeneral").value,
+    model: document.getElementById("apiModelGeneral").value
+  };
+  localStorage.setItem("generalApiConfig", JSON.stringify(config));
+  alert("Đã lưu API chung!");
+}
+.
 - Giữ đúng ý chính và dữ kiện quan trọng của bản gốc, không bịa thông tin sai.
 - Mở rộng phân tích, thêm ngữ cảnh, giải thích sâu hơn, câu văn hay hơn bản gốc.
 - Không viết ngắn cụt. Không tóm tắt.

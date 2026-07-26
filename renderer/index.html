@@ -53,6 +53,7 @@
   <div class="tab active" onclick="showTab(1)">Cấu hình Bot</div>
   <div class="tab" onclick="showTab(2)">Sáng tạo nội dung</div>
   <div class="tab" onclick="showTab(3)">Viết lại</div>
+  <div class="tab" onclick="showTab(4)">Cấu hình API Chung</div>
 </div>
 
 <div class="content-area">
@@ -187,6 +188,29 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+    <!-- TAB 4 -->
+  <div id="tab4" class="tab-content">
+    <div class="card">
+      <h3>Cấu hình API Chung (Dành cho Viết lại)</h3>
+      <div class="form-group">
+        <label>Loại API</label>
+        <select id="apiTypeGeneral">
+          <option value="gemini">Gemini</option>
+          <option value="openai">OpenAI</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>API Key</label>
+        <input type="password" id="apiKeyGeneral">
+      </div>
+      <div class="form-group">
+        <label>Model ID</label>
+        <input type="text" id="apiModelGeneral" value="gemini-2.0-flash">
+      </div>
+      <button onclick="saveGeneralApiConfig()">Lưu API Chung</button>
     </div>
   </div>
 
