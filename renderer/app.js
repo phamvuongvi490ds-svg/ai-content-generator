@@ -539,9 +539,16 @@ ${regenerated}`;
 
 
 async function fetchArticleIntoRewrite() {
-  const url = document.getElementById('rewriteArticleUrl').value.trim();
-  if (!url) return alert('Dán link bài báo trước.');
+  const url = document.getElementById("rewriteArticleUrl").value.trim();
+  if (!url) return alert("Dán link bài báo trước.");
   const data = await window.api.fetchArticle({url});
+  if (data.error) return alert("Lỗi lấy bài báo: " + data.error);
+  
+  const text = data.text || "";
+  document.getElementById("originalContent").value = text;
+  document.getElementById("counterArticleFetch").innerText = text.length + " ký tự";
+  document.getElementById("counterTab3").innerText = text.length + " ký tự";
+});
   if (data.error) return alert('Lỗi lấy bài báo: ' + data.error);
   document.getElementById('originalContent').value = data.text || '';
 }
@@ -637,3 +644,8 @@ ${text}`;
     setOutput('outputTab3', `[LỖI]: ${err.message}`);
   }
 }
+
+document.getElementById("originalContent").addEventListener("input", function() {
+    const counter = document.getElementById("counterArticleFetch");
+    if(counter) counter.innerText = this.value.length + " ký tự";
+});
