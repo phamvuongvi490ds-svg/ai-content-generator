@@ -608,3 +608,11 @@ window.addEventListener("load", () => {
     toggleGeneralApiInputs();
     updateGeneralModelOptions();
 });
+
+function updateGeneralModelOptions() {
+  const type = document.getElementById("apiTypeGeneral").value;
+  const select = document.getElementById("apiModelGeneral");
+  if (!select) return;
+  const options = MODEL_OPTIONS[type] || MODEL_OPTIONS.gateway;
+  select.innerHTML = options.map(m => `<option value="${m.value}">${m.label}</option>`).join("");
+}
