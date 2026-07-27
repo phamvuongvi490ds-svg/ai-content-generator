@@ -20,7 +20,8 @@
     .form-group { margin-bottom: 15px; }
     label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: #cbd5e1; }
     
-    input, textarea, select { width: 100%; background: #020617; border: 1px solid #475569; border-radius: 10px; padding: 12px; color: white; font-size: 14px; outline:none; }
+    input, textarea, select { width: 100%; background: #020617; border: 1px solid #475569; border-radius: 10px; padding: 12px; color: white; font-size: 14px; outline:none; pointer-events: auto; user-select: text; -webkit-user-select: text; }
+    #tab3 input, #tab3 textarea, #tab3 select { pointer-events: auto !important; user-select: text !important; -webkit-user-select: text !important; }
     input:focus, textarea:focus { border-color: var(--accent); }
     .password-mask { -webkit-text-security: disc !important; }
 
