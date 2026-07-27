@@ -198,10 +198,12 @@
       <h3>Cấu hình API Chung (Dành cho Viết lại)</h3>
       <div class="form-group">
         <label>Loại API</label>
-        <select id="apiTypeGeneral">
-          <option value="gemini">Gemini</option>
+        <select id="apiTypeGeneral" onchange="toggleGeneralApiInputs()">
+          <option value="gateway">Gateway</option>
+          <option value="gemini">Gemini Direct</option>
+          <option value="vertex">Vertex OAuth</option>
           <option value="openai">OpenAI</option>
-        </select>
+      </select>
       </div>
       <div class="form-group">
         <label>API Key</label>
