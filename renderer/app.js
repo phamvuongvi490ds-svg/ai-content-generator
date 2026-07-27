@@ -589,15 +589,17 @@ async function rewriteContent() {
     ? `BẮT BUỘC kết quả cuối cùng nằm trong khoảng ${min}-${max} ký tự. Nếu chưa đủ thì viết thêm, nếu quá dài thì rút gọn.`
     : (min ? `BẮT BUỘC kết quả cuối cùng tối thiểu ${min} ký tự.` : (max ? `BẮT BUỘC kết quả cuối cùng tối đa ${max} ký tự.` : 'Không giới hạn ký tự.'));
 
-  const prompt = `Bạn là biên tập viên chuyên nghiệp. Hãy VIẾT LẠI nội dung dưới đây.
+  const prompt = `You are a professional rewrite editor. Rewrite the source text below.
 
-YÊU CẦU BẮT BUỘC:
-- GIỮ NGUYÊN NGÔN NGỮ GỐC của nội dung trong ô Nội dung.
-- Văn phong nói tự nhiên, có nhịp ngắt nghỉ, không khô như văn báo chí.
+STRICT RULES:
+- First detect the source language from SOURCE TEXT. The final answer MUST be written in exactly that same language.
+- User extra requirements may be written in Vietnamese or any other language. Treat them ONLY as style/theme/instruction. DO NOT use the language of the extra requirements as the output language.
+- If SOURCE TEXT is French, output French. If SOURCE TEXT is English, output English. If SOURCE TEXT is Vietnamese, output Vietnamese.
+- Natural spoken style, clear rhythm, not dry news style.
 - ${lengthRule}
-- ${theme || 'Giữ đúng ý chính, không bịa thông tin.'}
+- Extra requirements: ${theme || 'Keep the original meaning. Do not invent facts.'}
 
-NỘI DUNG GỐC:
+SOURCE TEXT:
 ${original}`;
 
   setOutput('outputTab3', 'Đang viết lại...');
@@ -610,7 +612,7 @@ ${original}`;
     const tooShort = min && len < min;
     const tooLong = max && len > max;
     if (!tooShort && !tooLong) break;
-    const fixPrompt = `Kết quả hiện tại có ${len} ký tự, chưa đúng yêu cầu ${min || 0}-${max || 'không giới hạn'} ký tự. Hãy chỉnh lại văn bản dưới đây để nằm đúng khoảng ký tự, giữ nguyên ngôn ngữ gốc và ý chính. Chỉ trả về nội dung cuối cùng, không giải thích.\n\n${text}`;
+    const fixPrompt = `The text below has ${len} characters and does not match the required range ${min || 0}-${max || 'unlimited'} characters. Adjust ONLY length while preserving the same language already used in the text, the original meaning, and the user's style requirements. Return only the final rewritten text, no explanation.\n\n${text}`;
     data = await window.api.callApi({ bot: { ...cfg, apiType: cfg.apiType }, prompt: fixPrompt });
     if (data.error) break;
     text = data?.choices?.[0]?.message?.content || data?.candidates?.[0]?.content?.parts?.[0]?.text || text;
