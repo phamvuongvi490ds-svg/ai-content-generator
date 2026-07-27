@@ -33,6 +33,7 @@ window.onload = async () => {
   toggleBotApiInputs();
   updateModelOptions();
   renderBots();
+  loadGeneralApiConfig();
   loadArticleExtractorConfig();
 };
 
@@ -577,25 +578,30 @@ async function rewriteContent() {
   } else if (!generalConfig.apiKey) {
     return alert("Chưa nhập API Key trong Cấu hình API Chung.");
   }
-  
+
   const original = document.getElementById("originalContent").value.trim();
   if (!original) return alert("Chưa có nội dung.");
-  
-  // Prompt mới: tự động giữ ngôn ngữ gốc
-  const prompt = `Bạn là biên tập viên chuyên nghiệp. Hãy VIẾT LẠI nội dung dưới đây, đảm bảo GIỮ NGUYÊN NGÔN NGỮ của bản gốc (ví dụ gốc tiếng Pháp thì viết lại tiếng Pháp).
-  
-YÊU CẦU:
-- Phong cách văn nói, ngắt nghỉ như người bình thường kể chuyện.
-- Giữ ý chính, không bịa thông tin.
-- ${document.getElementById("rewriteRequirements").value.trim() || "Viết lại tự nhiên, hấp dẫn"}
+
+  const minRaw = document.getElementById("rewriteMinChars")?.value?.trim() || "";
+  const maxRaw = document.getElementById("rewriteMaxChars")?.value?.trim() || "";
+  const theme = document.getElementById("rewriteRequirements")?.value?.trim() || "";
+  const lengthRule = (minRaw && maxRaw)
+    ? `Bắt buộc viết trong khoảng từ ${minRaw} đến ${maxRaw} ký tự. Không được ngắn hơn ${minRaw}, không được dài hơn ${maxRaw}.`
+    : (minRaw ? `Bắt buộc viết tối thiểu ${minRaw} ký tự.` : (maxRaw ? `Bắt buộc viết tối đa ${maxRaw} ký tự.` : "Không giới hạn ký tự."));
+
+  const prompt = `Bạn là biên tập viên chuyên nghiệp. Hãy VIẾT LẠI nội dung dưới đây.
+
+YÊU CẦU BẮT BUỘC:
+- GIỮ NGUYÊN NGÔN NGỮ GỐC của nội dung trong ô Nội dung. Nếu gốc là tiếng Pháp thì viết lại bằng tiếng Pháp, nếu gốc là tiếng Anh thì viết lại bằng tiếng Anh, không tự chuyển sang tiếng Việt.
+- Văn phong phải giống người nói chuyện tự nhiên, có nhịp ngắt nghỉ, không khô như văn báo chí.
+- ${lengthRule}
+- ${theme || "Giữ đúng ý chính, không bịa thông tin."}
 
 NỘI DUNG GỐC:
 ${original}`;
 
   setOutput("outputTab3", "Đang viết lại...");
-  // Sử dụng API chung
   const data = await window.api.callApi({ bot: { ...generalConfig, apiType: generalConfig.apiType }, prompt });
-  
   if (data.error) return setOutput("outputTab3", "Lỗi: " + data.error);
   const text = data?.choices?.[0]?.message?.content || data?.candidates?.[0]?.content?.parts?.[0]?.text || "Không có kết quả.";
   setOutput("outputTab3", text);
@@ -641,4 +647,27 @@ function saveGeneralApiConfig() {
   };
   localStorage.setItem('generalApiConfig', JSON.stringify(cfg));
   alert('Đã lưu cấu hình API Chung!');
+}
+
+
+function loadGeneralApiConfig() {
+  const cfg = JSON.parse(localStorage.getItem('generalApiConfig') || '{}');
+  if (!cfg.apiType) return;
+  const typeEl = document.getElementById('apiTypeGeneral');
+  if (typeEl) typeEl.value = cfg.apiType;
+  toggleGeneralApiInputs();
+  const modelEl = document.getElementById('apiModelGeneral');
+  if (modelEl && cfg.model) modelEl.value = cfg.model;
+  if (cfg.apiType === 'gemini') {
+    const el = document.getElementById('genApiKeyGemini');
+    if (el) el.value = cfg.apiKey || '';
+  }
+  if (cfg.apiType === 'openai') {
+    const el = document.getElementById('genApiKeyOpenAI');
+    if (el) el.value = cfg.apiKey || '';
+  }
+  if (cfg.apiType === 'vertex') {
+    const el = document.getElementById('genServiceAccountPath');
+    if (el) el.value = cfg.serviceAccountPath || '';
+  }
 }
