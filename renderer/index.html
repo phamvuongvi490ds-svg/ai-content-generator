@@ -193,53 +193,6 @@
     </div>
   </div>
   <!-- TAB 4 -->
-
-  <!-- TAB 3 -->
-  <div id="tab3" class="tab-content">
-    <div class="card">
-      <h3>Viết lại nội dung</h3>
-
-      <div class="form-group">
-        <label>Độ dài viết lại (ký tự)</label>
-        <div style="display:flex; gap:8px; align-items:center;">
-          <input type="number" id="rewriteMinChars" placeholder="Từ">
-          <span style="color:#94a3b8;">-</span>
-          <input type="number" id="rewriteMaxChars" placeholder="Đến">
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Dán link bài báo vào để lấy nội dung</label>
-        <div style="display:flex; gap:8px;">
-          <input type="text" id="rewriteArticleUrl" placeholder="Dán link bài báo..." style="pointer-events:auto; user-select:text; -webkit-user-select:text;">
-          <button class="secondary" onclick="fetchArticleIntoRewrite()" style="width:auto; white-space:nowrap;">🔗 Lấy nội dung</button>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <label style="margin-bottom:0;">Nội dung</label>
-          <span class="char-counter" id="counterArticleFetch">0 ký tự</span>
-        </div>
-        <textarea id="originalContent" rows="8" style="margin-top:10px; pointer-events:auto; user-select:text; -webkit-user-select:text;"></textarea>
-      </div>
-
-      <div class="form-group">
-        <label>Yêu cầu viết / theme</label>
-        <textarea id="rewriteRequirements" rows="2" style="pointer-events:auto; user-select:text; -webkit-user-select:text;"></textarea>
-      </div>
-
-      <button onclick="rewriteContent()">♻️ Bắt đầu viết lại</button>
-      <button class="secondary" onclick="copyOutput('outputTab3')">📋 Copy</button>
-      <button class="secondary" onclick="downloadRewriteResult()">💾 Tải về</button>
-
-      <div class="output-wrap" style="margin-top:20px">
-        <div class="char-counter" id="counterTab3">0 ký tự</div>
-        <div id="outputTab3" class="output-box"></div>
-      </div>
-    </div>
-  </div>
-
   <div id="tab4" class="tab-content">
     <div class="card">
       <h3>Cấu hình API Chung (Dành cho Viết lại)</h3>
