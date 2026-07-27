@@ -604,3 +604,7 @@ function updateGeneralModelOptions() {
   const options = MODEL_OPTIONS[type] || MODEL_OPTIONS.gateway;
   select.innerHTML = options.map(m => `<option value="${m.value}">${m.label}</option>`).join("");
 }
+window.addEventListener("load", () => {
+    toggleGeneralApiInputs();
+    updateGeneralModelOptions();
+});
