@@ -637,3 +637,16 @@ function saveGeneralApiConfig() {
   localStorage.setItem('generalApiConfig', JSON.stringify(cfg));
   alert('Đã lưu cấu hình API Chung!');
 }
+
+// Unlock rewrite tab inputs only
+window.addEventListener('DOMContentLoaded', () => {
+  ['rewriteArticleUrl', 'originalContent', 'rewriteRequirements'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.disabled = false;
+    el.readOnly = false;
+    el.style.pointerEvents = 'auto';
+    el.style.userSelect = 'text';
+    el.style.webkitUserSelect = 'text';
+  });
+});
