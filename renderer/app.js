@@ -571,45 +571,56 @@ async function copyOriginalContent() {
 }
 
 async function rewriteContent() {
-  const generalConfig = JSON.parse(localStorage.getItem("generalApiConfig") || "{}");
-  if (!generalConfig.apiType) return alert("Chưa cấu hình API chung. Vào tab Cấu hình API Chung để lưu trước.");
-  if (generalConfig.apiType === "vertex") {
-    if (!generalConfig.serviceAccountPath) return alert("Chưa chọn file JSON cho Vertex.");
-  } else if (!generalConfig.apiKey) {
-    return alert("Chưa nhập API Key trong Cấu hình API Chung.");
-  }
+  const cfg = config.generalApiConfig || JSON.parse(localStorage.getItem('generalApiConfig') || '{}');
+  if (!cfg.apiType) return alert("Chưa cấu hình API chung. Vào tab Cấu hình API Chung để lưu trước.");
+  if (cfg.apiType === 'vertex' && !cfg.serviceAccountPath) return alert("Chưa chọn file JSON cho Vertex.");
+  if ((cfg.apiType === 'gemini' || cfg.apiType === 'openai') && !cfg.apiKey) return alert("Chưa nhập API Key trong Cấu hình API Chung.");
 
-  const original = document.getElementById("originalContent").value.trim();
+  const original = document.getElementById('originalContent').value.trim();
   if (!original) return alert("Chưa có nội dung.");
 
-  const minRaw = document.getElementById("rewriteMinChars")?.value?.trim() || "";
-  const maxRaw = document.getElementById("rewriteMaxChars")?.value?.trim() || "";
-  const theme = document.getElementById("rewriteRequirements")?.value?.trim() || "";
-  const lengthRule = (minRaw && maxRaw)
-    ? `Bắt buộc viết trong khoảng từ ${minRaw} đến ${maxRaw} ký tự. Không được ngắn hơn ${minRaw}, không được dài hơn ${maxRaw}.`
-    : (minRaw ? `Bắt buộc viết tối thiểu ${minRaw} ký tự.` : (maxRaw ? `Bắt buộc viết tối đa ${maxRaw} ký tự.` : "Không giới hạn ký tự."));
+  const minRaw = document.getElementById('rewriteMinChars')?.value?.trim() || '';
+  const maxRaw = document.getElementById('rewriteMaxChars')?.value?.trim() || '';
+  const theme = document.getElementById('rewriteRequirements')?.value?.trim() || '';
+  const min = parseInt(minRaw || '0', 10) || 0;
+  const max = parseInt(maxRaw || '0', 10) || 0;
+  if (min && max && min > max) return alert('Khoảng ký tự không hợp lệ: số từ phải nhỏ hơn số đến.');
+  const lengthRule = (min && max)
+    ? `BẮT BUỘC kết quả cuối cùng nằm trong khoảng ${min}-${max} ký tự. Nếu chưa đủ thì viết thêm, nếu quá dài thì rút gọn.`
+    : (min ? `BẮT BUỘC kết quả cuối cùng tối thiểu ${min} ký tự.` : (max ? `BẮT BUỘC kết quả cuối cùng tối đa ${max} ký tự.` : 'Không giới hạn ký tự.'));
 
   const prompt = `Bạn là biên tập viên chuyên nghiệp. Hãy VIẾT LẠI nội dung dưới đây.
 
 YÊU CẦU BẮT BUỘC:
-- GIỮ NGUYÊN NGÔN NGỮ GỐC của nội dung trong ô Nội dung. Nếu gốc là tiếng Pháp thì viết lại bằng tiếng Pháp, nếu gốc là tiếng Anh thì viết lại bằng tiếng Anh, không tự chuyển sang tiếng Việt.
-- Văn phong phải giống người nói chuyện tự nhiên, có nhịp ngắt nghỉ, không khô như văn báo chí.
+- GIỮ NGUYÊN NGÔN NGỮ GỐC của nội dung trong ô Nội dung.
+- Văn phong nói tự nhiên, có nhịp ngắt nghỉ, không khô như văn báo chí.
 - ${lengthRule}
-- ${theme || "Giữ đúng ý chính, không bịa thông tin."}
+- ${theme || 'Giữ đúng ý chính, không bịa thông tin.'}
 
 NỘI DUNG GỐC:
 ${original}`;
 
-  setOutput("outputTab3", "Đang viết lại...");
-  const data = await window.api.callApi({ bot: { ...generalConfig, apiType: generalConfig.apiType }, prompt });
-  if (data.error) return setOutput("outputTab3", "Lỗi: " + data.error);
-  const text = data?.choices?.[0]?.message?.content || data?.candidates?.[0]?.content?.parts?.[0]?.text || "Không có kết quả.";
-  setOutput("outputTab3", text);
+  setOutput('outputTab3', 'Đang viết lại...');
+  let data = await window.api.callApi({ bot: { ...cfg, apiType: cfg.apiType }, prompt });
+  if (data.error) return setOutput('outputTab3', 'Lỗi: ' + data.error);
+  let text = data?.choices?.[0]?.message?.content || data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Không có kết quả.';
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const len = text.length;
+    const tooShort = min && len < min;
+    const tooLong = max && len > max;
+    if (!tooShort && !tooLong) break;
+    const fixPrompt = `Kết quả hiện tại có ${len} ký tự, chưa đúng yêu cầu ${min || 0}-${max || 'không giới hạn'} ký tự. Hãy chỉnh lại văn bản dưới đây để nằm đúng khoảng ký tự, giữ nguyên ngôn ngữ gốc và ý chính. Chỉ trả về nội dung cuối cùng, không giải thích.\n\n${text}`;
+    data = await window.api.callApi({ bot: { ...cfg, apiType: cfg.apiType }, prompt: fixPrompt });
+    if (data.error) break;
+    text = data?.choices?.[0]?.message?.content || data?.candidates?.[0]?.content?.parts?.[0]?.text || text;
+  }
+
+  if (max && text.length > max) text = text.slice(0, max).trim();
+  setOutput('outputTab3', text);
 }
 
-
-
-// === GENERAL API CONFIG LOGIC ===
+// === GENERAL API CONFIG LOGIC ===// === GENERAL API CONFIG LOGIC ===
 const GENERAL_MODELS = {
   gemini: [{ value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' }, { value: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash' }],
   vertex: [{ value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' }, { value: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash' }],
@@ -637,21 +648,23 @@ async function pickGeneralServiceAccount() {
   if (file) document.getElementById('genServiceAccountPath').value = file;
 }
 
-function saveGeneralApiConfig() {
+async function saveGeneralApiConfig() {
   const type = document.getElementById('apiTypeGeneral').value;
   const cfg = {
     apiType: type,
     model: document.getElementById('apiModelGeneral').value,
-    apiKey: document.getElementById('genApiKeyGemini').value || document.getElementById('genApiKeyOpenAI').value,
-    serviceAccountPath: document.getElementById('genServiceAccountPath').value
+    apiKey: document.getElementById('genApiKeyGemini').value || document.getElementById('genApiKeyOpenAI').value || '',
+    serviceAccountPath: document.getElementById('genServiceAccountPath').value || ''
   };
+  config.generalApiConfig = cfg;
   localStorage.setItem('generalApiConfig', JSON.stringify(cfg));
+  await window.api.saveConfig(config);
   alert('Đã lưu cấu hình API Chung!');
 }
 
 
 function loadGeneralApiConfig() {
-  const cfg = JSON.parse(localStorage.getItem('generalApiConfig') || '{}');
+  const cfg = config.generalApiConfig || JSON.parse(localStorage.getItem('generalApiConfig') || '{}');
   if (!cfg.apiType) return;
   const typeEl = document.getElementById('apiTypeGeneral');
   if (typeEl) typeEl.value = cfg.apiType;
