@@ -571,7 +571,12 @@ async function copyOriginalContent() {
 
 async function rewriteContent() {
   const generalConfig = JSON.parse(localStorage.getItem("generalApiConfig") || "{}");
-  if (!generalConfig.apiKey) return alert("Chưa cấu hình API chung. Vào tab Cấu hình API Chung để lưu trước.");
+  if (!generalConfig.apiType) return alert("Chưa cấu hình API chung. Vào tab Cấu hình API Chung để lưu trước.");
+  if (generalConfig.apiType === "vertex") {
+    if (!generalConfig.serviceAccountPath) return alert("Chưa chọn file JSON cho Vertex.");
+  } else if (!generalConfig.apiKey) {
+    return alert("Chưa nhập API Key trong Cấu hình API Chung.");
+  }
   
   const original = document.getElementById("originalContent").value.trim();
   if (!original) return alert("Chưa có nội dung.");
