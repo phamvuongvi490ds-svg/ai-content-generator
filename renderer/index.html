@@ -50,10 +50,148 @@
 
 <div class="tabs">
   <div style="font-size:18px; font-weight:900; color:#fff; margin-right:30px;">AI CONTENT PRO</div>
-  <div class="tab active" onclick="showTab(3)">Viết lại</div>
+  <div class="tab active" onclick="showTab(1)">Cấu hình Bot</div>
+  <div class="tab" onclick="showTab(2)">Sáng tạo nội dung</div>
+  <div class="tab" onclick="showTab(3)">Viết lại</div>
+  <div class="tab" onclick="showTab(4)">Cấu hình API Chung</div>
+
+
 </div>
 
 <div class="content-area">
+  <!-- TAB 1 -->
+  <div id="tab1" class="tab-content active">
+    <div class="card">
+      <h3>Danh sách Chatbot đã lưu</h3>
+      <div id="botList"></div>
+    </div>
+    <div class="card">
+      <h3>Cấu hình trích xuất bài báo</h3>
+      <p style="color:#94a3b8; font-size:13px; margin-top:-5px;">Phần này chỉ dùng Gemini/Vertex để lấy đúng nội dung bài báo. Không liên quan đến chatbot viết bài.</p>
+      <div class="form-group">
+        <label>Service Account JSON Vertex/Gemini</label>
+        <input type="text" id="articleServiceAccountPath" readonly placeholder="Chọn file Service Account JSON dùng riêng cho lấy nội dung bài báo">
+        <button class="secondary" style="margin-top:5px" onclick="pickArticleServiceAccount()">Chọn File</button>
+      </div>
+      <button onclick="saveArticleExtractorConfig()">Lưu cấu hình trích xuất</button>
+    </div>
+    <div class="card">
+      <h3>Thiết lập Chatbot Mới</h3>
+      <div class="form-group">
+        <label>Tên Gợi Nhớ</label>
+        <input type="text" id="botName" placeholder="Ví dụ: Bot SEO, Bot TikTok...">
+      </div>
+      <div class="form-group">
+        <label>Loại API</label>
+        <div style="display:flex; gap:15px; background:#0f172a; padding:10px; border-radius:8px;">
+          <label style="color:#fff; cursor:pointer;"><input type="radio" name="botApiType" value="gateway" checked onchange="toggleBotApiInputs()"> Gateway</label>
+          <label style="color:#fff; cursor:pointer;"><input type="radio" name="botApiType" value="gemini" onchange="toggleBotApiInputs()"> Gemini Direct</label>
+          <label style="color:#fff; cursor:pointer;"><input type="radio" name="botApiType" value="vertex" onchange="toggleBotApiInputs()"> Vertex OAuth</label>
+          <label style="color:#fff; cursor:pointer;"><input type="radio" name="botApiType" value="openai" onchange="toggleBotApiInputs()"> OpenAI</label>
+        </div>
+      </div>
+      <div id="botGatewayGroup">
+        <div class="form-group">
+          <label>Gateway Base URL</label>
+          <input type="text" id="botBaseUrl" value="https://fisher-fare-wiley-travelling.trycloudflare.com">
+        </div>
+        <div class="form-group">
+          <label>API Keys</label>
+          <textarea id="botApiKeysGateway" class="password-mask" rows="2"></textarea>
+        </div>
+      </div>
+      <div id="botGeminiGroup" style="display:none">
+        <div class="form-group">
+          <label>Gemini Base URL</label>
+          <input type="text" id="botGeminiBaseUrl" value="https://generativelanguage.googleapis.com">
+        </div>
+        <div class="form-group">
+          <label>Gemini API Keys</label>
+          <textarea id="botApiKeysGemini" class="password-mask" rows="2"></textarea>
+        </div>
+      </div>
+      <div id="botVertexGroup" style="display:none">
+        <div class="form-group">
+          <label>Service Account JSON</label>
+          <input type="text" id="botServiceAccountPath" readonly>
+          <button class="secondary" style="margin-top:5px" onclick="pickServiceAccount()">Chọn File</button>
+        </div>
+      </div>
+      <div id="botOpenAIGroup" style="display:none">
+        <div class="form-group">
+          <label>OpenAI Base URL</label>
+          <input type="text" id="botOpenAIBaseUrl" value="https://api.openai.com">
+        </div>
+        <div class="form-group">
+          <label>OpenAI API Keys</label>
+          <textarea id="botApiKeysOpenAI" class="password-mask" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Model ID</label>
+        <select id="botModel"></select>
+      </div>
+      <div class="form-group">
+        <label>System Instruction</label>
+        <textarea id="systemInstruction" rows="4"></textarea>
+      </div>
+      <button id="saveBotBtn" onclick="addBot()">Lưu Chatbot</button>
+      <button class="secondary" onclick="clearBotForm()">Hủy / Tạo mới</button>
+    </div>
+  </div>
+
+  <!-- TAB 2 -->
+  <div id="tab2" class="tab-content">
+    <div class="card">
+      <h3>Sáng tạo nội dung hàng loạt</h3>
+      <div style="display: flex; gap: 20px; align-items: flex-end; margin-bottom: 15px;">
+        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+          <label>Chọn Chatbot</label>
+          <select id="botSelectMain"></select>
+        </div>
+        <div class="form-group" style="width: 300px; margin-bottom: 0;">
+          <label>Độ dài (Ký tự)</label>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="number" id="minChars" placeholder="Từ" style="padding: 8px;">
+            <span style="color: #94a3b8;">-</span>
+            <input type="number" id="maxChars" placeholder="Đến" style="padding: 8px;">
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Nhập danh sách tiêu đề / chủ đề (mỗi dòng 1 tiêu đề)</label>
+        <textarea id="topic" rows="5" placeholder="Nhập tiêu đề hoặc chủ đề mỗi dòng..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Yêu cầu thêm</label>
+        <textarea id="requirements" rows="3" placeholder="Ví dụ: Giọng văn hài hước, phân tích chuyên sâu, chèn thêm các từ khóa SEO..."></textarea>
+      </div>
+      <button id="generateBtn" onclick="generateContent()">🚀 Bắt đầu tạo nội dung</button>
+      
+      <div id="genProgressWrap" class="progress-container">
+        <div id="genProgressBar" class="progress-bar"></div>
+      </div>
+      <div id="genError" class="error-detail"></div>
+      
+      <div class="results-container">
+        <div id="resultTabs" class="results-sidebar">
+          <p style="color:#64748b; font-size:12px">Chưa có kết quả.</p>
+        </div>
+        <div class="results-main">
+          <div id="tab2OutputWrap" style="display:none">
+            <div style="margin-bottom:15px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+              <button class="btn-primary" onclick="regenerateActiveTitle()">🔄 Tạo lại</button>
+              <button class="secondary" onclick="copyOutput('outputTab2')">📋 Copy</button>
+              <button class="secondary" onclick="downloadActiveResult()">💾 Tải xuống</button>
+              <button class="secondary" onclick="downloadAllResults()">📦 Tải tất cả</button>
+              <div class="char-counter" id="counterTab2" style="margin-bottom:0; margin-left:auto;">0 ký tự</div>
+            </div>
+            <div id="outputTab2" class="output-box"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
   <!-- TAB 4 -->
   <div id="tab4" class="tab-content">
     <div class="card">
