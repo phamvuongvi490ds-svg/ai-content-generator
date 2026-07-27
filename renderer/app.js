@@ -666,3 +666,26 @@ document.getElementById("originalContent").addEventListener("input", function() 
     const counter = document.getElementById("counterArticleFetch");
     if(counter) counter.innerText = this.value.length + " ký tự";
 });
+
+function toggleGeneralApiInputs() {
+  const type = document.getElementById("apiTypeGeneral").value;
+  document.getElementById("genGeminiGroup").style.display = (type === "gemini") ? "block" : "none";
+  document.getElementById("genVertexGroup").style.display = (type === "vertex") ? "block" : "none";
+  document.getElementById("genOpenAIGroup").style.display = (type === "openai") ? "block" : "none";
+}
+
+async function pickGeneralServiceAccount() {
+  const file = await window.api.selectFile();
+  if (file) document.getElementById("genServiceAccountPath").value = file;
+}
+
+function saveGeneralApiConfig() {
+  const config = {
+    apiType: document.getElementById("apiTypeGeneral").value,
+    apiKey: document.getElementById("genApiKeyGemini").value || document.getElementById("genApiKeyOpenAI").value,
+    model: document.getElementById("apiModelGeneral").value,
+    serviceAccountPath: document.getElementById("genServiceAccountPath").value
+  };
+  localStorage.setItem("generalApiConfig", JSON.stringify(config));
+  alert("Đã lưu API chung!");
+}
