@@ -597,40 +597,12 @@ ${original}`;
 }
 
 
-function updateGeneralModelOptions() {
-  const type = document.getElementById("apiTypeGeneral").value;
-  const select = document.getElementById("apiModelGeneral");
-  if (!select) return;
-  const options = MODEL_OPTIONS[type] || MODEL_OPTIONS.gateway;
-  select.innerHTML = options.map(m => `<option value="${m.value}">${m.label}</option>`).join("");
-}
-window.addEventListener("load", () => {
-    toggleGeneralApiInputs();
-    updateGeneralModelOptions();
-});
 
-function updateGeneralModelOptions() {
-  const type = document.getElementById("apiTypeGeneral").value;
-  const select = document.getElementById("apiModelGeneral");
-  if (!select) return;
-  const options = MODEL_OPTIONS[type] || MODEL_OPTIONS.gateway;
-  select.innerHTML = options.map(m => `<option value="${m.value}">${m.label}</option>`).join("");
-}
-
-// === General API config for Rewrite tab ===
+// === GENERAL API CONFIG LOGIC ===
 const GENERAL_MODELS = {
-  gemini: [
-    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-    { value: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash' }
-  ],
-  vertex: [
-    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-    { value: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash' }
-  ],
-  openai: [
-    { value: 'gpt-4o-mini', label: 'GPT-4o mini' },
-    { value: 'gpt-4o', label: 'GPT-4o' }
-  ]
+  gemini: [{ value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' }, { value: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash' }],
+  vertex: [{ value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' }, { value: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash' }],
+  openai: [{ value: 'gpt-4o-mini', label: 'GPT-4o mini' }, { value: 'gpt-4o', label: 'GPT-4o' }]
 };
 
 function updateGeneralModelOptions() {
@@ -639,17 +611,13 @@ function updateGeneralModelOptions() {
   if (!select) return;
   const options = GENERAL_MODELS[type] || GENERAL_MODELS.gemini;
   select.innerHTML = options.map(m => `<option value="${m.value}">${m.label}</option>`).join('');
-  if (!select.value && options[0]) select.value = options[0].value;
 }
 
 function toggleGeneralApiInputs() {
   const type = document.getElementById('apiTypeGeneral')?.value || 'gemini';
-  const gemini = document.getElementById('genGeminiGroup');
-  const vertex = document.getElementById('genVertexGroup');
-  const openai = document.getElementById('genOpenAIGroup');
-  if (gemini) gemini.style.display = type === 'gemini' ? 'block' : 'none';
-  if (vertex) vertex.style.display = type === 'vertex' ? 'block' : 'none';
-  if (openai) openai.style.display = type === 'openai' ? 'block' : 'none';
+  document.getElementById('genGeminiGroup').style.display = (type === 'gemini') ? 'block' : 'none';
+  document.getElementById('genVertexGroup').style.display = (type === 'vertex') ? 'block' : 'none';
+  document.getElementById('genOpenAIGroup').style.display = (type === 'openai') ? 'block' : 'none';
   updateGeneralModelOptions();
 }
 
@@ -659,19 +627,13 @@ async function pickGeneralServiceAccount() {
 }
 
 function saveGeneralApiConfig() {
-  const type = document.getElementById('apiTypeGeneral')?.value || 'gemini';
+  const type = document.getElementById('apiTypeGeneral').value;
   const cfg = {
     apiType: type,
-    model: document.getElementById('apiModelGeneral')?.value || 'gemini-2.5-flash',
-    apiKeys: [],
-    serviceAccountPath: document.getElementById('genServiceAccountPath')?.value || ''
+    model: document.getElementById('apiModelGeneral').value,
+    apiKey: document.getElementById('genApiKeyGemini').value || document.getElementById('genApiKeyOpenAI').value,
+    serviceAccountPath: document.getElementById('genServiceAccountPath').value
   };
-  if (type === 'gemini') cfg.apiKeys = [(document.getElementById('genApiKeyGemini')?.value || '').trim()].filter(Boolean);
-  if (type === 'openai') cfg.apiKeys = [(document.getElementById('genApiKeyOpenAI')?.value || '').trim()].filter(Boolean);
   localStorage.setItem('generalApiConfig', JSON.stringify(cfg));
-  alert('Đã lưu API Chung thành công!');
+  alert('Đã lưu cấu hình API Chung!');
 }
-
-window.addEventListener('load', () => {
-  toggleGeneralApiInputs();
-});
