@@ -49,18 +49,22 @@ function saveLengthSettings() {
   const maxEl = document.getElementById('maxChars');
   const rMin = document.getElementById('rewriteMinChars');
   const rMax = document.getElementById('rewriteMaxChars');
+  const rewriteReq = document.getElementById('rewriteRequirements');
   if (minEl) localStorage.setItem('aiContentMinChars', minEl.value.trim());
   if (maxEl) localStorage.setItem('aiContentMaxChars', maxEl.value.trim());
   if (rMin) localStorage.setItem('aiRewriteMinChars', rMin.value.trim());
   if (rMax) localStorage.setItem('aiRewriteMaxChars', rMax.value.trim());
+  if (rewriteReq) localStorage.setItem('aiRewriteRequirements', rewriteReq.value.trim());
 }
 
 function bindLengthSettingsAutosave() {
   const rMin = document.getElementById('rewriteMinChars');
   const rMax = document.getElementById('rewriteMaxChars');
+  const rewriteReq = document.getElementById('rewriteRequirements');
   if (rMin) rMin.value = localStorage.getItem('aiRewriteMinChars') || '';
   if (rMax) rMax.value = localStorage.getItem('aiRewriteMaxChars') || '';
-  ['minChars', 'maxChars', 'rewriteMinChars', 'rewriteMaxChars'].forEach(id => {
+  if (rewriteReq) rewriteReq.value = localStorage.getItem('aiRewriteRequirements') || '';
+  ['minChars', 'maxChars', 'rewriteMinChars', 'rewriteMaxChars', 'rewriteRequirements'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', saveLengthSettings);
   });
@@ -582,6 +586,7 @@ async function rewriteContent() {
   const minRaw = document.getElementById('rewriteMinChars')?.value?.trim() || '';
   const maxRaw = document.getElementById('rewriteMaxChars')?.value?.trim() || '';
   const theme = document.getElementById('rewriteRequirements')?.value?.trim() || '';
+  localStorage.setItem('aiRewriteRequirements', theme);
   const min = parseInt(minRaw || '0', 10) || 0;
   const max = parseInt(maxRaw || '0', 10) || 0;
   if (min && max && min > max) return alert('Khoảng ký tự không hợp lệ: số từ phải nhỏ hơn số đến.');
